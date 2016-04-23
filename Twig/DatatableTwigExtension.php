@@ -65,9 +65,9 @@ class DatatableTwigExtension extends Twig_Extension
     public function getFunctions()
     {
         return array(
-            new Twig_SimpleFunction('datatable_render', array($this, 'datatableRender'), array('is_safe' => array('all'))),
-            new Twig_SimpleFunction('datatable_render_html', array($this, 'datatableRenderHtml'), array('is_safe' => array('all'))),
-            new Twig_SimpleFunction('datatable_render_js', array($this, 'datatableRenderJs'), array('is_safe' => array('all'))),
+            new Twig_SimpleFunction('datatable_render', array($this, 'datatableRender'), array('is_safe' => array('all'), 'needs_environment' => true)),
+            new Twig_SimpleFunction('datatable_render_html', array($this, 'datatableRenderHtml'), array('is_safe' => array('all'), 'needs_environment' => true)),
+            new Twig_SimpleFunction('datatable_render_js', array($this, 'datatableRenderJs'), array('is_safe' => array('all'), 'needs_environment' => true)),
             new Twig_SimpleFunction('datatable_filter_render', array($this, 'datatableFilterRender'), array('is_safe' => array('all'), 'needs_environment' => true)),
             new Twig_SimpleFunction('datatable_icon', array($this, 'datatableIcon'), array('is_safe' => array('all'), 'needs_environment' => true))
         );
@@ -119,14 +119,16 @@ class DatatableTwigExtension extends Twig_Extension
     /**
      * Renders the template.
      *
+     * @param Twig_Environment $twig
      * @param AbstractDatatableView $datatable
      *
      * @return mixed|string|void
      * @throws Exception
      */
-    public function datatableRender(AbstractDatatableView $datatable)
+    public function datatableRender(Twig_Environment $twig, AbstractDatatableView $datatable)
     {
-        return $datatable->render();
+        $templates = $datatable->getTemplates();
+        return $twig->render($templates['base'], $this->getOptions($datatable));
     }
 
     /**
@@ -158,27 +160,31 @@ class DatatableTwigExtension extends Twig_Extension
     /**
      * Renders the html template.
      *
+     * @param Twig_Environment $twig
      * @param AbstractDatatableView $datatable
      *
      * @return mixed|string|void
      * @throws Exception
      */
-    public function datatableRenderHtml(AbstractDatatableView $datatable)
+    public function datatableRenderHtml(Twig_Environment $twig, AbstractDatatableView $datatable)
     {
-        return $datatable->render('html');
+        $templates = $datatable->getTemplates();
+        return $twig->render($templates['html'], $this->getOptions($datatable));
     }
 
     /**
      * Renders the js template.
      *
+     * @param Twig_Environment $twig
      * @param AbstractDatatableView $datatable
      *
      * @return mixed|string|void
      * @throws Exception
      */
-    public function datatableRenderJs(AbstractDatatableView $datatable)
+    public function datatableRenderJs(Twig_Environment $twig, AbstractDatatableView $datatable)
     {
-        return $datatable->render('js');
+        $templates = $datatable->getTemplates();
+        return $twig->render($templates['js'], $this->getOptions($datatable));
     }
 
     /**
@@ -196,5 +202,40 @@ class DatatableTwigExtension extends Twig_Extension
             return $twig->render('SgDatatablesBundle:Action:icon.html.twig', array('icon' => $icon, 'label' => $label));
         else
             return $label;
+    }
+
+    protected function getOptions(AbstractDatatableView $datatableView)
+    {
+        $options = array();
+
+        if ($datatableView->getFeatures()->getServerSide()) {
+            if (empty($datatableView->getAjax()->getUrl())) {
+                throw new Exception('render(): The ajax url parameter must be given.');
+            }
+        } else {
+            $data = $datatableView->getData();
+            if (null === $data) {
+                throw new Exception('render(): Call setData() in your controller.');
+            }
+
+            $options['view_data'] = $data;
+        }
+
+        $options['view_actions'] = $datatableView->getTopActions();
+        $options['view_features'] = $datatableView->getFeatures();
+        $options['view_options'] = $datatableView->getOptions();
+        $options['view_callbacks'] = $datatableView->getCallbacks();
+        $options['view_events'] = $datatableView->getEvents();
+        $options['view_columns'] = $datatableView->getColumnBuilder()->getColumns();
+        $options['view_ajax'] = $datatableView->getAjax();
+
+        $options['view_multiselect'] = $datatableView->getColumnBuilder()->isMultiselect();
+        $options['view_multiselect_column'] = $datatableView->getColumnBuilder()->getMultiselectColumn();
+
+        $options['view_table_id'] = $datatableView->getName();
+
+        $options['datatable'] = $datatableView;
+
+        return $options;
     }
 }

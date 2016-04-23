@@ -34,24 +34,6 @@ interface DatatableViewInterface
     public function buildDatatable(array $options = array());
 
     /**
-     * Renders the datatable view.
-     *
-     * @param string $type
-     *
-     * @return mixed
-     * @throws Exception
-     * @throws Twig_Error
-     */
-    public function render($type = 'all');
-
-    /**
-     * Get the Twig_Environment service.
-     *
-     * @return Twig_Environment
-     */
-    public function getTwig();
-
-    /**
      * Get entity manager.
      *
      * @return EntityManagerInterface

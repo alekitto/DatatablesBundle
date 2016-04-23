@@ -66,6 +66,11 @@ class DatatableDataManager
      */
     private $locale;
 
+    /**
+     * @var \Twig_Environment
+     */
+    private $twig;
+
     //-------------------------------------------------
     // Ctor.
     //-------------------------------------------------
@@ -73,12 +78,13 @@ class DatatableDataManager
     /**
      * Ctor.
      *
-     * @param RequestStack $requestStack
-     * @param Serializer   $serializer
-     * @param array        $configs
-     * @param array        $bundles
+     * @param RequestStack      $requestStack
+     * @param Serializer        $serializer
+     * @param array             $configs
+     * @param array             $bundles
+     * @param \Twig_Environment $twig
      */
-    public function __construct(RequestStack $requestStack, Serializer $serializer, array $configs, array $bundles)
+    public function __construct(RequestStack $requestStack, Serializer $serializer, array $configs, array $bundles, \Twig_Environment $twig)
     {
         $this->request = $requestStack->getCurrentRequest();
         $this->serializer = $serializer;
@@ -95,6 +101,7 @@ class DatatableDataManager
         }
 
         $this->locale = $this->request->getLocale();
+        $this->twig = $twig;
     }
 
     //-------------------------------------------------
@@ -110,8 +117,6 @@ class DatatableDataManager
      */
     public function getQueryFrom(DatatableViewInterface $datatableView)
     {
-        $twig = $datatableView->getTwig();
-
         $type = $datatableView->getAjax()->getType();
         $parameterBag = null;
 
@@ -129,7 +134,7 @@ class DatatableDataManager
             $params,
             $datatableView,
             $this->configs,
-            $twig,
+            $this->twig,
             $this->imagineBundle,
             $this->doctrineExtensions,
             $this->locale

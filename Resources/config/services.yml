@@ -23,7 +23,6 @@ services:
         arguments:
             - '@security.authorization_checker'
             - '@security.token_storage'
-            - '@twig'
             - '@translator.default'
             - '@router'
             - '@doctrine.orm.entity_manager'
@@ -36,3 +35,4 @@ services:
             - '@sg_datatables.serializer'
             - '%sg_datatables.datatable.query%'
             - '%kernel.bundles%'
+            - '@twig'

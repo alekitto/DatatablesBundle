@@ -19,7 +19,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Twig_Environment;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\DependencyInjection\Container;
@@ -46,13 +45,6 @@ abstract class AbstractDatatableView implements DatatableViewInterface
      * @var TokenStorageInterface
      */
     protected $securityToken;
-
-    /**
-     * The Twig_Environment service.
-     *
-     * @var Twig_Environment
-     */
-    protected $twig;
 
     /**
      * The Translator service.
@@ -162,7 +154,6 @@ abstract class AbstractDatatableView implements DatatableViewInterface
      *
      * @param AuthorizationCheckerInterface $authorizationChecker
      * @param TokenStorageInterface         $securityToken
-     * @param Twig_Environment              $twig
      * @param TranslatorInterface           $translator
      * @param RouterInterface               $router
      * @param EntityManagerInterface        $em
@@ -171,7 +162,6 @@ abstract class AbstractDatatableView implements DatatableViewInterface
     public function __construct(
         AuthorizationCheckerInterface $authorizationChecker,
         TokenStorageInterface $securityToken,
-        Twig_Environment $twig,
         TranslatorInterface $translator,
         RouterInterface $router,
         EntityManagerInterface $em,
@@ -182,7 +172,6 @@ abstract class AbstractDatatableView implements DatatableViewInterface
 
         $this->authorizationChecker = $authorizationChecker;
         $this->securityToken = $securityToken;
-        $this->twig = $twig;
         $this->translator = $translator;
         $this->router = $router;
         $this->em = $em;
@@ -205,61 +194,6 @@ abstract class AbstractDatatableView implements DatatableViewInterface
     //-------------------------------------------------
     // DatatableViewInterface
     //-------------------------------------------------
-
-    /**
-     * {@inheritdoc}
-     */
-    public function render($type = 'all')
-    {
-        $options = array();
-
-        if (true === $this->features->getServerSide()) {
-            if ('' === $this->ajax->getUrl()) {
-                throw new Exception('render(): The ajax url parameter must be given.');
-            }
-        } else {
-            if (null === $this->data) {
-                throw new Exception('render(): Call setData() in your controller.');
-            } else {
-                $options['view_data'] = $this->data;
-            }
-        }
-
-        $options['view_actions'] = $this->topActions;
-        $options['view_features'] = $this->features;
-        $options['view_options'] = $this->options;
-        $options['view_callbacks'] = $this->callbacks;
-        $options['view_events'] = $this->events;
-        $options['view_columns'] = $this->columnBuilder->getColumns();
-        $options['view_ajax'] = $this->ajax;
-
-        $options['view_multiselect'] = $this->columnBuilder->isMultiselect();
-        $options['view_multiselect_column'] = $this->columnBuilder->getMultiselectColumn();
-
-        $options['view_table_id'] = $this->getName();
-
-        $options['datatable'] = $this;
-
-        switch ($type) {
-            case 'html':
-                return $this->twig->render($this->templates['html'], $options);
-                break;
-            case 'js':
-                return $this->twig->render($this->templates['js'], $options);
-                break;
-            default:
-                return $this->twig->render($this->templates['base'], $options);
-                break;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTwig()
-    {
-        return $this->twig;
-    }
 
     /**
      * {@inheritdoc}
@@ -383,6 +317,16 @@ abstract class AbstractDatatableView implements DatatableViewInterface
     public function getTemplates()
     {
         return $this->templates;
+    }
+
+    /**
+     * Get events.
+     *
+     * @return Events
+     */
+    public function getEvents()
+    {
+        return $this->events;
     }
 
     //-------------------------------------------------
